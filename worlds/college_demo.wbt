@@ -1,0 +1,220 @@
+#VRML_SIM R2023b utf8
+# College demo arena for the 4WD autonomous car.
+# Zone A (west,  z ~ -2.5): slalom boxes      -> obstacle avoidance  (press 1)
+# Zone B (mid,   z ~  1.2): corridor         -> wall following      (press 2)
+# Zone C (east,  z ~  3.1): waypoint markers -> waypoint navigation (press 3)
+# Teleop: T. Stop: Space. Reset: R. Scoreboard: P. Help: H.
+
+WorldInfo {
+  title "Autonomous Car - College Demo Arena"
+  gravity 0 -9.81 0
+}
+
+Viewpoint {
+  position 2.5 3.4 5.5
+  orientation -0.42 0.88 0.22 0.85
+  follow "COLLEGECAR"
+  followType "Tracking Shot"
+}
+
+TexturedBackground {
+}
+
+TexturedBackgroundLight {
+}
+
+DirectionalLight {
+  direction -0.4 -1 -0.25
+  intensity 0.8
+}
+
+Floor {
+  size 12 9
+  appearance PBRAppearance {
+    baseColor 0.23 0.24 0.27
+    roughness 0.95
+    metalness 0
+  }
+}
+
+# ---------- perimeter walls ----------
+Solid {
+  translation 0 0.25 -4.6
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.65 0.66 0.70 roughness 0.8 }
+      geometry Box { size 12.4 0.5 0.2 }
+    }
+  ]
+  boundingObject Box { size 12.4 0.5 0.2 }
+}
+Solid {
+  translation 0 0.25 4.6
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.65 0.66 0.70 roughness 0.8 }
+      geometry Box { size 12.4 0.5 0.2 }
+    }
+  ]
+  boundingObject Box { size 12.4 0.5 0.2 }
+}
+Solid {
+  translation -6.1 0.25 0
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.65 0.66 0.70 roughness 0.8 }
+      geometry Box { size 0.2 0.5 9.4 }
+    }
+  ]
+  boundingObject Box { size 0.2 0.5 9.4 }
+}
+Solid {
+  translation 6.1 0.25 0
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.65 0.66 0.70 roughness 0.8 }
+      geometry Box { size 0.2 0.5 9.4 }
+    }
+  ]
+  boundingObject Box { size 0.2 0.5 9.4 }
+}
+
+# ---------- start pad ----------
+Transform {
+  translation -3.5 0.006 -2.5
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.15 0.35 0.85 roughness 0.7 }
+      geometry Box { size 0.9 0.012 0.9 }
+    }
+  ]
+}
+
+# ---------- Zone A: slalom lane tint (visual only) ----------
+Transform {
+  translation 0.25 0.004 -2.5
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.85 0.45 0.10 roughness 0.9 }
+      geometry Box { size 5.6 0.008 1.7 }
+    }
+  ]
+}
+
+# ---------- Zone A: slalom obstacles (0.45m boxes) ----------
+Solid {
+  translation -2.0 0.25 -1.9
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.90 0.45 0.08 roughness 0.7 }
+      geometry Box { size 0.45 0.5 0.45 }
+    }
+  ]
+  boundingObject Box { size 0.45 0.5 0.45 }
+}
+Solid {
+  translation -1.0 0.25 -3.1
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.90 0.45 0.08 roughness 0.7 }
+      geometry Box { size 0.45 0.5 0.45 }
+    }
+  ]
+  boundingObject Box { size 0.45 0.5 0.45 }
+}
+Solid {
+  translation 0.0 0.25 -1.9
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.90 0.45 0.08 roughness 0.7 }
+      geometry Box { size 0.45 0.5 0.45 }
+    }
+  ]
+  boundingObject Box { size 0.45 0.5 0.45 }
+}
+Solid {
+  translation 1.0 0.25 -3.1
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.90 0.45 0.08 roughness 0.7 }
+      geometry Box { size 0.45 0.5 0.45 }
+    }
+  ]
+  boundingObject Box { size 0.45 0.5 0.45 }
+}
+Solid {
+  translation 2.0 0.25 -1.9
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.90 0.45 0.08 roughness 0.7 }
+      geometry Box { size 0.45 0.5 0.45 }
+    }
+  ]
+  boundingObject Box { size 0.45 0.5 0.45 }
+}
+
+# ---------- Zone B: corridor walls (1.4m wide, 6m long) ----------
+Solid {
+  translation 1.5 0.25 0.5
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.50 0.55 0.62 roughness 0.8 }
+      geometry Box { size 6.0 0.5 0.15 }
+    }
+  ]
+  boundingObject Box { size 6.0 0.5 0.15 }
+}
+Solid {
+  translation 1.5 0.25 1.9
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.50 0.55 0.62 roughness 0.8 }
+      geometry Box { size 6.0 0.5 0.15 }
+    }
+  ]
+  boundingObject Box { size 6.0 0.5 0.15 }
+}
+
+# ---------- Zone C: waypoint markers (visual only) ----------
+Transform {
+  translation 4.5 0.012 3.6
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.10 0.85 0.20 roughness 0.6 }
+      geometry Cylinder { radius 0.15 height 0.024 }
+    }
+  ]
+}
+Transform {
+  translation 2.5 0.012 3.6
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.90 0.85 0.10 roughness 0.6 }
+      geometry Cylinder { radius 0.15 height 0.024 }
+    }
+  ]
+}
+Transform {
+  translation 2.5 0.012 2.6
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.10 0.70 0.90 roughness 0.6 }
+      geometry Cylinder { radius 0.15 height 0.024 }
+    }
+  ]
+}
+Transform {
+  translation 4.5 0.012 2.6
+  children [
+    Shape {
+      appearance PBRAppearance { baseColor 0.85 0.15 0.75 roughness 0.6 }
+      geometry Cylinder { radius 0.15 height 0.024 }
+    }
+  ]
+}
+
+# ---------- the robot ----------
+DEF COLLEGECAR CollegeCar {
+  translation -3.5 0 -2.5
+  rotation 0 1 0 0
+}
