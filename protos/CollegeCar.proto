@@ -1,0 +1,766 @@
+#VRML_SIM R2023b utf8
+# CollegeCar - 4WD autonomous car matching the final CAD (260x180 plates,
+# 65mm wheels, wheelbase 135mm, track 200mm, 3x ToF, Pi Camera V2, MPU6050).
+# Webots axes: X forward, Y up, Z left  (CAD: X fwd, Y left, Z up).
+
+PROTO CollegeCar [
+  field SFVec3f    translation  0 0 0
+  field SFRotation   rotation     0 1 0 0
+  field SFString     controller   "college_car"
+]
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    controller IS controller
+    children [
+
+      # ---------------- chassis: one rigid physics body ----------------
+      DEF BODY Solid {
+        translation 0 0.0925 0
+        children [
+          # lower plate 260x180x4 @ y=57
+          Transform {
+            translation 0 -0.0355 0
+            children [
+              Shape {
+                appearance PBRAppearance { baseColor 0.16 0.16 0.18 roughness 0.7 metalness 0.1 }
+                geometry Box { size 0.26 0.004 0.18 }
+              }
+            ]
+          }
+          # upper deck 260x180x4 @ y=127
+          Transform {
+            translation 0 0.0345 0
+            children [
+              Shape {
+                appearance PBRAppearance { baseColor 0.20 0.20 0.23 roughness 0.7 metalness 0.1 }
+                geometry Box { size 0.26 0.004 0.18 }
+              }
+            ]
+          }
+          # 4 pillars @ (±110, ±70)
+          Transform {
+            translation 0.11 -0.0005 0.07
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.55 0.55 0.60 roughness 0.5 metalness 0.4 }
+              geometry Box { size 0.02 0.066 0.02 } } ]
+          }
+          Transform {
+            translation 0.11 -0.0005 -0.07
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.55 0.55 0.60 roughness 0.5 metalness 0.4 }
+              geometry Box { size 0.02 0.066 0.02 } } ]
+          }
+          Transform {
+            translation -0.11 -0.0005 0.07
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.55 0.55 0.60 roughness 0.5 metalness 0.4 }
+              geometry Box { size 0.02 0.066 0.02 } } ]
+          }
+          Transform {
+            translation -0.11 -0.0005 -0.07
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.55 0.55 0.60 roughness 0.5 metalness 0.4 }
+              geometry Box { size 0.02 0.066 0.02 } } ]
+          }
+          # battery box 75x56x40 @ (-60, 0)
+          Transform {
+            translation -0.06 -0.0195 0
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.10 0.45 0.15 roughness 0.6 }
+              geometry Box { size 0.075 0.04 0.056 } } ]
+          }
+          # SmartElex 15D x2 @ (45, ±47.5)
+          Transform {
+            translation 0.045 -0.0245 0.0475
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.10 0.25 0.70 roughness 0.6 }
+              geometry Box { size 0.07 0.018 0.055 } } ]
+          }
+          Transform {
+            translation 0.045 -0.0245 -0.0475
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.10 0.25 0.70 roughness 0.6 }
+              geometry Box { size 0.07 0.018 0.055 } } ]
+          }
+          # switch/fuse/XT60 block @ (110, -25)
+          Transform {
+            translation 0.11 -0.0245 -0.025
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.75 0.15 0.10 roughness 0.6 }
+              geometry Box { size 0.03 0.02 0.05 } } ]
+          }
+          # Pi 5 @ (-60, 35)
+          Transform {
+            translation -0.06 0.045 0.035
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.05 0.40 0.10 roughness 0.6 }
+              geometry Box { size 0.085 0.017 0.056 } } ]
+          }
+          # ESP32 @ (-60, -45)
+          Transform {
+            translation -0.06 0.0425 -0.045
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.08 0.08 0.10 roughness 0.6 }
+              geometry Box { size 0.052 0.01 0.028 } } ]
+          }
+          # XL4015 @ (10, -62)
+          Transform {
+            translation 0.01 0.0435 -0.062
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.30 0.30 0.35 roughness 0.5 metalness 0.5 }
+              geometry Box { size 0.048 0.012 0.024 } } ]
+          }
+          # LM2596 @ (75, -65)
+          Transform {
+            translation 0.075 0.0425 -0.065
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.30 0.30 0.35 roughness 0.5 metalness 0.5 }
+              geometry Box { size 0.043 0.012 0.021 } } ]
+          }
+          # MPU6050 @ (0, 65)
+          Transform {
+            translation 0 0.049 0.065
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.60 0.10 0.60 roughness 0.6 }
+              geometry Box { size 0.02 0.005 0.016 } } ]
+          }
+          # servo PDB 60x40x8 @ (45, 68) - separate BEC for the arm servos
+          Transform {
+            translation 0.045 0.0405 0.068
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.10 0.50 0.15 roughness 0.6 }
+              geometry Box { size 0.06 0.008 0.04 } } ]
+          }
+          # arm base (static): white flange + column @ (45, 0), deck top
+          # (BODY-local y: flange centre 0.0395, column centre 0.0515)
+          Transform {
+            translation 0.045 0.0395 0
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.92 0.92 0.94 roughness 0.5 }
+              geometry Cylinder { radius 0.046 height 0.006 } } ]
+          }
+          Transform {
+            translation 0.045 0.0515 0
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.92 0.92 0.94 roughness 0.5 }
+              geometry Cylinder { radius 0.04 height 0.018 } } ]
+          }
+          # front bumper @ (138, 0)
+          Transform {
+            translation 0.138 -0.0525 0
+            children [ Shape {
+              appearance PBRAppearance { baseColor 0.80 0.20 0.10 roughness 0.6 }
+              geometry Box { size 0.02 0.026 0.17 } } ]
+          }
+        ]
+        boundingObject Box { size 0.26 0.075 0.18 }
+        physics Physics {
+          mass 1.85   # 1.7 car + 0.15 arm base + PDB
+        }
+      }
+
+      # ---------------- wheels: 4x HingeJoint, axle along Z ----------------
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 0 1
+          anchor 0.0675 0.04 0.1
+        }
+        device [
+          RotationalMotor {
+            name "wheel_fl"
+            maxVelocity 7.33
+            maxTorque 0.25
+          }
+          PositionSensor {
+            name "enc_fl"
+          }
+        ]
+        endPoint Solid {
+          translation 0.0675 0.04 0.1
+          rotation 1 0 0 1.5708
+          children [
+            Shape {
+              appearance PBRAppearance { baseColor 0.08 0.08 0.09 roughness 0.9 }
+              geometry Cylinder { radius 0.0325 height 0.026 }
+            }
+            Shape {
+              appearance PBRAppearance { baseColor 0.55 0.55 0.58 roughness 0.4 metalness 0.6 }
+              geometry Cylinder { radius 0.012 height 0.028 }
+            }
+          ]
+          boundingObject Cylinder { radius 0.0325 height 0.026 }
+          physics Physics {
+            density -1
+            mass 0.06
+          }
+        }
+      }
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 0 1
+          anchor 0.0675 0.04 -0.1
+        }
+        device [
+          RotationalMotor {
+            name "wheel_fr"
+            maxVelocity 7.33
+            maxTorque 0.25
+          }
+          PositionSensor {
+            name "enc_fr"
+          }
+        ]
+        endPoint Solid {
+          translation 0.0675 0.04 -0.1
+          rotation 1 0 0 1.5708
+          children [
+            Shape {
+              appearance PBRAppearance { baseColor 0.08 0.08 0.09 roughness 0.9 }
+              geometry Cylinder { radius 0.0325 height 0.026 }
+            }
+            Shape {
+              appearance PBRAppearance { baseColor 0.55 0.55 0.58 roughness 0.4 metalness 0.6 }
+              geometry Cylinder { radius 0.012 height 0.028 }
+            }
+          ]
+          boundingObject Cylinder { radius 0.0325 height 0.026 }
+          physics Physics {
+            density -1
+            mass 0.06
+          }
+        }
+      }
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 0 1
+          anchor -0.0675 0.04 0.1
+        }
+        device [
+          RotationalMotor {
+            name "wheel_rl"
+            maxVelocity 7.33
+            maxTorque 0.25
+          }
+          PositionSensor {
+            name "enc_rl"
+          }
+        ]
+        endPoint Solid {
+          translation -0.0675 0.04 0.1
+          rotation 1 0 0 1.5708
+          children [
+            Shape {
+              appearance PBRAppearance { baseColor 0.08 0.08 0.09 roughness 0.9 }
+              geometry Cylinder { radius 0.0325 height 0.026 }
+            }
+            Shape {
+              appearance PBRAppearance { baseColor 0.55 0.55 0.58 roughness 0.4 metalness 0.6 }
+              geometry Cylinder { radius 0.012 height 0.028 }
+            }
+          ]
+          boundingObject Cylinder { radius 0.0325 height 0.026 }
+          physics Physics {
+            density -1
+            mass 0.06
+          }
+        }
+      }
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 0 1
+          anchor -0.0675 0.04 -0.1
+        }
+        device [
+          RotationalMotor {
+            name "wheel_rr"
+            maxVelocity 7.33
+            maxTorque 0.25
+          }
+          PositionSensor {
+            name "enc_rr"
+          }
+        ]
+        endPoint Solid {
+          translation -0.0675 0.04 -0.1
+          rotation 1 0 0 1.5708
+          children [
+            Shape {
+              appearance PBRAppearance { baseColor 0.08 0.08 0.09 roughness 0.9 }
+              geometry Cylinder { radius 0.0325 height 0.026 }
+            }
+            Shape {
+              appearance PBRAppearance { baseColor 0.55 0.55 0.58 roughness 0.4 metalness 0.6 }
+              geometry Cylinder { radius 0.012 height 0.028 }
+            }
+          ]
+          boundingObject Cylinder { radius 0.0325 height 0.026 }
+          physics Physics {
+            density -1
+            mass 0.06
+          }
+        }
+      }
+
+      # ---------------- 6-DOF arm (photo-style, blue/white) ----------------
+      # Joint model (CAD: X fwd, Y left, Z up; Webots: X fwd, Y up, Z left;
+      # Webots Box size = (CAD x, CAD z, CAD y)):
+      #   J0 base yaw    axis (0,-1,0) so +angle = CAD yaw +q0, +-170 deg
+      #   J1 shoulder    axis (0,0,1), +angle = CAD pitch q1, -20..+115 deg
+      #   J2 elbow       axis (0,0,1), RELATIVE to upper arm, -155..+25 deg
+      #   J3 wrist pitch axis (0,0,1), RELATIVE to forearm, -120..+120 deg
+      #   J4 wrist roll  axis (1,0,0), Webots angle = -q4 (see controller)
+      #   J5 gripper     two finger joints, axis (0,0,1); L = -phi, R = +phi
+      # Link lengths 120 / 110 / 70 / 85 mm, max reach 385 mm.
+      # The arm loads in the STOWED pose (endpoint rotations below):
+      #   q = (170, 85, -150, 65, 0) deg, fingers closed (phi = 15 deg).
+      #   A horizontal start (all zeros) would clip the front ToF bracket.
+      # Practical limits found by the CAD sweep (see photo-arm README):
+      #   shoulder >= +14 deg when yawed forward (ToF bracket, top 173 mm);
+      #   low picks need |yaw| >= ~28 deg (same bracket); elbow -125..+25
+      #   at the demo reference (-150 only with the shoulder raised, as in
+      #   the stowed pose); wrist -80..+120 at the demo reference.
+      # Colours match the photo: royal blue (0.12 0.35 0.85), white (0.92).
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 -1 0
+          anchor 0.045 0.129 0
+          minStop -2.967060
+          maxStop 2.967060
+        }
+        device [
+          RotationalMotor {
+            name "arm_j0"
+            maxVelocity 3.0
+            maxTorque 1.2
+          }
+          PositionSensor {
+            name "arm_pos_j0"
+          }
+        ]
+        endPoint Solid {
+          translation 0.045 0.129 0
+          rotation 0 -1 0 2.967060
+          children [
+            # blue turret disc r44 x 10 @ z 153..163
+            Transform {
+              translation 0 0.029 0
+              children [ Shape {
+                appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                geometry Cylinder { radius 0.044 height 0.01 } } ]
+            }
+            # clevis cheeks (36 x 9 x 30) @ y +-21, z 153..183
+            Transform {
+              translation 0 0.039 0.021
+              children [ Shape {
+                appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                geometry Box { size 0.036 0.03 0.009 } } ]
+            }
+            Transform {
+              translation 0 0.039 -0.021
+              children [ Shape {
+                appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                geometry Box { size 0.036 0.03 0.009 } } ]
+            }
+            # pivot shaft r7 x 54 along Z (Webots) @ z 179
+            Transform {
+              translation 0 0.05 0
+              rotation 1 0 0 1.5708
+              children [ Shape {
+                appearance PBRAppearance { baseColor 0.5 0.5 0.55 roughness 0.4 metalness 0.6 }
+                geometry Cylinder { radius 0.007 height 0.054 } } ]
+            }
+            # J1 shoulder (child of the yawed turret)
+            HingeJoint {
+              jointParameters HingeJointParameters {
+                axis 0 0 1
+                anchor 0 0.05 0
+                minStop -0.349066
+                maxStop 2.007129
+              }
+              device [
+                RotationalMotor {
+                  name "arm_j1"
+                  maxVelocity 3.0
+                  maxTorque 1.2
+                }
+                PositionSensor {
+                  name "arm_pos_j1"
+                }
+              ]
+              endPoint Solid {
+                translation 0 0.05 0
+                rotation 0 0 1 1.483530
+                children [
+                  # blue shoulder housing r26 x 36 along Z @ pivot
+                  Transform {
+                    rotation 1 0 0 1.5708
+                    children [ Shape {
+                      appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                      geometry Cylinder { radius 0.026 height 0.036 } } ]
+                  }
+                  # blue upper arm 120 mm along +X (window cutout is CAD-only)
+                  Transform {
+                    translation 0.06 0 0
+                    children [ Shape {
+                      appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                      geometry Box { size 0.12 0.024 0.034 } } ]
+                  }
+                  # elbow disc r20 x 30 along Z @ (120, 0, 0)
+                  Transform {
+                    translation 0.12 0 0
+                    rotation 1 0 0 1.5708
+                    children [ Shape {
+                      appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                      geometry Cylinder { radius 0.02 height 0.03 } } ]
+                  }
+                  # J2 elbow (child of the shoulder link)
+                  HingeJoint {
+                    jointParameters HingeJointParameters {
+                      axis 0 0 1
+                      anchor 0.12 0 0
+                      minStop -2.705261
+                      maxStop 0.436333
+                    }
+                    device [
+                      RotationalMotor {
+                        name "arm_j2"
+                        maxVelocity 3.0
+                        maxTorque 1.2
+                      }
+                      PositionSensor {
+                        name "arm_pos_j2"
+                      }
+                    ]
+                    endPoint Solid {
+                      translation 0.12 0 0
+                      rotation 0 0 1 -2.617994
+                      children [
+                        # white forearm 110 mm along +X
+                        Transform {
+                          translation 0.055 0 0
+                          children [ Shape {
+                            appearance PBRAppearance { baseColor 0.92 0.92 0.94 roughness 0.5 }
+                            geometry Box { size 0.11 0.02 0.03 } } ]
+                        }
+                        # blue collars at both ends
+                        Transform {
+                          translation 0.005 0 0
+                          rotation 0 0 1 1.5708
+                          children [ Shape {
+                            appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                            geometry Cylinder { radius 0.016 height 0.008 } } ]
+                        }
+                        Transform {
+                          translation 0.105 0 0
+                          rotation 0 0 1 1.5708
+                          children [ Shape {
+                            appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                            geometry Cylinder { radius 0.016 height 0.008 } } ]
+                        }
+                        # white wrist housing r17 x 34 along Z @ (110, 0, 0)
+                        Transform {
+                          translation 0.11 0 0
+                          rotation 1 0 0 1.5708
+                          children [ Shape {
+                            appearance PBRAppearance { baseColor 0.92 0.92 0.94 roughness 0.5 }
+                            geometry Cylinder { radius 0.017 height 0.034 } } ]
+                        }
+                        # J3 wrist pitch (child of the forearm)
+                        HingeJoint {
+                          jointParameters HingeJointParameters {
+                            axis 0 0 1
+                            anchor 0.11 0 0
+                            minStop -2.094396
+                            maxStop 2.094396
+                          }
+                          device [
+                            RotationalMotor {
+                              name "arm_j3"
+                              maxVelocity 3.0
+                              maxTorque 1.2
+                            }
+                            PositionSensor {
+                              name "arm_pos_j3"
+                            }
+                          ]
+                          endPoint Solid {
+                            translation 0.11 0 0
+                            rotation 0 0 1 1.134464
+                            children [
+                              # white wrist beam 44 mm along +X
+                              Transform {
+                                translation 0.022 0 0
+                                children [ Shape {
+                                  appearance PBRAppearance { baseColor 0.92 0.92 0.94 roughness 0.5 }
+                                  geometry Box { size 0.044 0.018 0.024 } } ]
+                              }
+                              # roll collar r13 x 26 along X @ (57, 0, 0)
+                              Transform {
+                                translation 0.057 0 0
+                                rotation 0 0 1 1.5708
+                                children [ Shape {
+                                  appearance PBRAppearance { baseColor 0.92 0.92 0.94 roughness 0.5 }
+                                  geometry Cylinder { radius 0.013 height 0.026 } } ]
+                              }
+                              # J4 wrist roll (child of the wrist link)
+                              HingeJoint {
+                                jointParameters HingeJointParameters {
+                                  axis 1 0 0
+                                  anchor 0.07 0 0
+                                  minStop -3.141593
+                                  maxStop 3.141593
+                                }
+                                device [
+                                  RotationalMotor {
+                                    name "arm_j4"
+                                    maxVelocity 3.0
+                                    maxTorque 1.2
+                                  }
+                                  PositionSensor {
+                                    name "arm_pos_j4"
+                                  }
+                                ]
+                                endPoint Solid {
+                                  translation 0.07 0 0
+                                  children [
+                                    # white palm 36 x 46 x 28
+                                    Transform {
+                                      translation 0.018 0 0
+                                      children [ Shape {
+                                        appearance PBRAppearance { baseColor 0.92 0.92 0.94 roughness 0.5 }
+                                        geometry Box { size 0.036 0.028 0.046 } } ]
+                                    }
+                                    # drive housing 14 x 30 x 20
+                                    Transform {
+                                      translation -0.002 0 0
+                                      children [ Shape {
+                                        appearance PBRAppearance { baseColor 0.92 0.92 0.94 roughness 0.5 }
+                                        geometry Box { size 0.014 0.02 0.03 } } ]
+                                    }
+                                    # lead screw r4 x 44 along Z @ (18, 0, 9)
+                                    Transform {
+                                      translation 0.018 0.009 0
+                                      rotation 1 0 0 1.5708
+                                      children [ Shape {
+                                        appearance PBRAppearance { baseColor 0.5 0.5 0.55 roughness 0.4 metalness 0.6 }
+                                        geometry Cylinder { radius 0.004 height 0.044 } } ]
+                                    }
+                                    # finger L: pivot (0.03, +0.016, 0), closes at -phi
+                                    HingeJoint {
+                                      jointParameters HingeJointParameters {
+                                        axis 0 0 1
+                                        anchor 0.03 0.016 0
+                                        minStop -0.261800
+                                        maxStop 0
+                                      }
+                                      device [
+                                        RotationalMotor {
+                                          name "finger_L"
+                                          maxVelocity 2.0
+                                          maxTorque 0.3
+                                        }
+                                        PositionSensor {
+                                          name "arm_pos_finger_L"
+                                        }
+                                      ]
+                                      endPoint Solid {
+                                        translation 0.03 0.016 0
+                                        rotation 0 0 1 -0.261799
+                                        children [
+                                          Transform {
+                                            translation 0.023 0 0
+                                            children [ Shape {
+                                              appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                                              geometry Box { size 0.046 0.009 0.01 } } ]
+                                          }
+                                          Transform {
+                                            translation 0.056 -0.0038 0
+                                            rotation 0 0 1 -0.349
+                                            children [ Shape {
+                                              appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                                              geometry Box { size 0.022 0.015 0.008 } } ]
+                                          }
+                                        ]
+                                        boundingObject Transform {
+                                          translation 0.0335 0 0
+                                          children [ Box { size 0.067 0.015 0.01 } ]
+                                        }
+                                        physics Physics {
+                                          density -1
+                                          mass 0.03
+                                        }
+                                      }
+                                    }
+                                    # finger R: pivot (0.03, -0.016, 0), closes at +phi
+                                    HingeJoint {
+                                      jointParameters HingeJointParameters {
+                                        axis 0 0 1
+                                        anchor 0.03 -0.016 0
+                                        minStop 0
+                                        maxStop 0.261800
+                                      }
+                                      device [
+                                        RotationalMotor {
+                                          name "finger_R"
+                                          maxVelocity 2.0
+                                          maxTorque 0.3
+                                        }
+                                        PositionSensor {
+                                          name "arm_pos_finger_R"
+                                        }
+                                      ]
+                                      endPoint Solid {
+                                        translation 0.03 -0.016 0
+                                        rotation 0 0 1 0.261799
+                                        children [
+                                          Transform {
+                                            translation 0.023 0 0
+                                            children [ Shape {
+                                              appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                                              geometry Box { size 0.046 0.009 0.01 } } ]
+                                          }
+                                          Transform {
+                                            translation 0.056 0.0038 0
+                                            rotation 0 0 1 0.349
+                                            children [ Shape {
+                                              appearance PBRAppearance { baseColor 0.12 0.35 0.85 roughness 0.5 }
+                                              geometry Box { size 0.022 0.015 0.008 } } ]
+                                          }
+                                        ]
+                                        boundingObject Transform {
+                                          translation 0.0335 0 0
+                                          children [ Box { size 0.067 0.015 0.01 } ]
+                                        }
+                                        physics Physics {
+                                          density -1
+                                          mass 0.03
+                                        }
+                                      }
+                                    }
+                                  ]
+                                  boundingObject Transform {
+                                    translation 0.0135 0 0
+                                    children [ Box { size 0.045 0.028 0.046 } ]
+                                  }
+                                  physics Physics {
+                                    density -1
+                                    mass 0.1
+                                  }
+                                }
+                              }
+                            ]
+                            boundingObject Transform {
+                              translation 0.035 0 0
+                              children [ Box { size 0.07 0.03 0.03 } ]
+                            }
+                            physics Physics {
+                              density -1
+                              mass 0.12
+                            }
+                          }
+                        }
+                      ]
+                      boundingObject Transform {
+                        translation 0.0635 0 0
+                        children [ Box { size 0.127 0.034 0.034 } ]
+                      }
+                      physics Physics {
+                        density -1
+                        mass 0.2
+                      }
+                    }
+                  }
+                ]
+                boundingObject Transform {
+                  translation 0.057 0 0
+                  children [ Box { size 0.166 0.052 0.036 } ]
+                }
+                physics Physics {
+                  density -1
+                  mass 0.25
+                }
+              }
+            }
+          ]
+          boundingObject Transform {
+            translation 0 0.039 0
+            children [ Box { size 0.088 0.03 0.088 } ]
+          }
+          physics Physics {
+            density -1
+            mass 0.12
+          }
+        }
+      }
+
+      # ---------------- sensors (Webots: sense/look along +X) ----------------
+      # front ToF @ (124, 0, 140)mm, faces +X
+      DistanceSensor {
+        translation 0.124 0.140 0
+        name "tof_front"
+        type "generic"
+        numberOfRays 1
+        lookupTable [ 0 0 0, 0.02 1000 0, 2.0 0 0 ]
+        children [
+          Shape {
+            appearance PBRAppearance { baseColor 0.55 0.10 0.10 roughness 0.6 }
+            geometry Box { size 0.016 0.01 0.013 }
+          }
+        ]
+      }
+      # left ToF @ (98, 82, 140)mm, yaw +30deg toward front-left
+      DistanceSensor {
+        translation 0.098 0.140 0.082
+        rotation 0 1 0 -0.5236
+        name "tof_left"
+        type "generic"
+        numberOfRays 1
+        lookupTable [ 0 0 0, 0.02 1000 0, 2.0 0 0 ]
+        children [
+          Shape {
+            appearance PBRAppearance { baseColor 0.55 0.10 0.10 roughness 0.6 }
+            geometry Box { size 0.016 0.01 0.013 }
+          }
+        ]
+      }
+      # right ToF @ (98, -82, 140)mm, yaw -30deg toward front-right
+      DistanceSensor {
+        translation 0.098 0.140 -0.082
+        rotation 0 1 0 0.5236
+        name "tof_right"
+        type "generic"
+        numberOfRays 1
+        lookupTable [ 0 0 0, 0.02 1000 0, 2.0 0 0 ]
+        children [
+          Shape {
+            appearance PBRAppearance { baseColor 0.55 0.10 0.10 roughness 0.6 }
+            geometry Box { size 0.016 0.01 0.013 }
+          }
+        ]
+      }
+      # Pi Camera V2 @ low front mount (118, 0, 150)mm, pitched down 12deg,
+      # 62.2deg HFOV. Moved from the mast (108, 0, 209): the mast stood in
+      # the arm's sweep, so the camera now sits on the low front mount
+      # (same mount as the photo-arm CAD package).
+      Camera {
+        translation 0.118 0.150 0
+        rotation 0 0 1 -0.2094
+        name "camera"
+        width 640
+        height 480
+        fieldOfView 1.0857
+        near 0.05
+      }
+      # MPU6050 equivalent
+      InertialUnit {
+        name "imu"
+      }
+      # ground-truth position (stand-in for the odometry stack under test)
+      GPS {
+        name "gps"
+      }
+    ]
+  }
+}
